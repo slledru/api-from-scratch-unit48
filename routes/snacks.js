@@ -3,7 +3,9 @@ var router = express.Router()
 const {
   listSnacks,
   findSnack,
-  createSnack
+  createSnack,
+  updateSnack,
+  deleteSnack
 } = require('../db/storage')
 
 /* GET snack listing. */
@@ -14,7 +16,8 @@ router.get('/', function(req, res, next) {
 
 router.get('/:id', function(req, res, next) {
   try {
-
+    const snack = findSnack(req.params.id)
+    res.status(200).send({ data: snack })
   } catch (err) {
     next(err)
   }
@@ -31,11 +34,22 @@ router.post('/', function(req, res, next) {
 })
 
 router.put('/:id', function(req, res, next) {
-  res.send('respond with a resource')
+  try {
+    const { brand, name, price, calories } = req.body
+    const snack = updateSnack(req.params.id, brand, name, price, calories)
+    res.status(200).send({ data: snack })
+  } catch (err) {
+    next(err)
+  }
 })
 
 router.delete('/:id', function(req, res, next) {
-  res.send('respond with a resource')
+  try {
+    const snack = deleteSnack(req.params.id)
+    res.status(200).send({ data: snack })
+  } catch (err) {
+    next(err)
+  }
 })
 
 module.exports = router

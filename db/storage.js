@@ -1,11 +1,10 @@
 const fs = require('fs')
 const path = require('path')
-const _ = require('lodash')
 const uuid = require('uuid')
 const httpErrors = require('http-errors')
 const dbFile = path.join(__dirname, 'store.json')
 
-const snacks = []
+let snacks = []
 
 function loadSnacks() {
   fs.readFile(dbFile, 'utf8', (err, data) => {
@@ -35,14 +34,17 @@ function listSnacks() {
 }
 
 function findSnack(id) {
-  const found = snacks.filter((snack) => snack.id === id)
-  if (found.length === 1) {
-    return found[0]
+  if (id) {
+    const found = snacks.filter((snack) => snack.id === id)
+    if (found.length === 1) {
+      return found[0]
+    }
+    if (found.length > 1) {
+      throw httpErrors(400, 'Invalid Id: Snack Id is not unique')
+    }
+    throw httpErrors(404, 'Invalid Id: Snack does not exist')
   }
-  if (found.length > 1) {
-    throw httpErrors(400, 'Invalid Id: Snack Id is not unique')
-  }
-  throw httpErrors(404, 'Invalid Id: Snack does not exist')
+  throw httpErrors(400, 'Required field missing')
 }
 
 function createSnack(brand, name, price, calories) {
@@ -55,9 +57,35 @@ function createSnack(brand, name, price, calories) {
   throw httpErrors(400, 'Required field missing')
 }
 
+function updateSnack(id, brand, name, price, calories) {
+  const snack = findSnack(id)
+  if (brand && name && price && calories) {
+    snack.brand = brand
+    snack.name = name
+    snack.price = price
+    snack.calories = calories
+    saveSnacks()
+    return snack
+  }
+  throw httpErrors(400, 'Required field missing')
+}
+
+function deleteSnack(id) {
+  const snack = findSnack(id)
+  const index = snacks.indexOf(snack)
+  if (index >= 0) {
+    snacks.splice(index, 1)
+    saveSnacks()
+    return snack
+  }
+  throw httpErrors(404, 'Invalid Id: Snack does not exist')
+}
+
 module.exports = {
   loadSnacks,
   listSnacks,
   findSnack,
-  createSnack
+  createSnack,
+  updateSnack,
+  deleteSnack
 }
